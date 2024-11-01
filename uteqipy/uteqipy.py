@@ -17,11 +17,11 @@ from scipy.ndimage.morphology import binary_closing, binary_fill_holes
 from skimage.measure import regionprops_table
 
 ####################################################################
-#                            _________                             #
-#                           / うてきパイ ）                           #
-#                           ‾‾‾‾‾‾‾‾‾‾‾                             #
+#                            __________                            #
+#                           / うてきパイ ）                          #
+#                           ‾‾‾‾‾‾‾‾‾‾‾                            #
 #    Unified Tool for Enhanced                                     #
-#             Quantification and Imaging of Precipitation Yield    #
+#          Quantification and Imaging of Precipitation dYnamics    #
 ####################################################################
 
 
