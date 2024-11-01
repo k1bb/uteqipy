@@ -1,6 +1,10 @@
 # uteqipy  
 **uteqipy** is a Python library for analysing images of precipitation particles taken with Rainscope (Suzuki et al., 2023).  
 It currently suppoorts image cleaning, binarisation and elliptical fitting of liquid raindrops.  
+## How to install
+```bash
+pip install git+https://github.com/k1bb/uteqipy.git
+```
 ## How to use
 ```python
 import uteqipy as up
