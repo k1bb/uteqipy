@@ -1,0 +1,16 @@
+Metadata-Version: 2.2
+Name: uteqipy
+Version: 0.0.0
+Author: Keiichi Hashimoto
+Author-email: khashimoto@eps.s.u-tokyo.ac.jp
+License-File: LICENSE
+Requires-Dist: matplotlib
+Requires-Dist: numpy
+Requires-Dist: pandas
+Requires-Dist: xarray
+Requires-Dist: pillow
+Requires-Dist: scipy
+Requires-Dist: scikit-image
+Dynamic: author
+Dynamic: author-email
+Dynamic: requires-dist

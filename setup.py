@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
         name="uteqipy", 
-        version="0.0.0", 
+        version="0.0.1", 
         author="Keiichi Hashimoto", 
         author_email="khashimoto@eps.s.u-tokyo.ac.jp", 
         packages=find_packages(), 
