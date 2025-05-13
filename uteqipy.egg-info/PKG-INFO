@@ -1,6 +1,6 @@
-Metadata-Version: 2.2
+Metadata-Version: 2.4
 Name: uteqipy
-Version: 0.0.0
+Version: 0.0.1
 Author: Keiichi Hashimoto
 Author-email: khashimoto@eps.s.u-tokyo.ac.jp
 License-File: LICENSE
@@ -13,4 +13,5 @@ Requires-Dist: scipy
 Requires-Dist: scikit-image
 Dynamic: author
 Dynamic: author-email
+Dynamic: license-file
 Dynamic: requires-dist

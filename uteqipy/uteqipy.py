@@ -269,12 +269,12 @@ class Factory:
         # 名前を変更する
         props = props.rename(
             columns={
-                "axis_major_length": "w",
-                "axis_minor_length": "h",
-                "bbox-0": "bbox_left",
-                "bbox-1": "bbox_bottom",
-                "bbox-2": "bbox_right",
-                "bbox-3": "bbox_top",
+                "axis_major_length": "width",
+                "axis_minor_length": "height",
+                "bbox-0": "bbox_bottom",
+                "bbox-1": "bbox_left",
+                "bbox-2": "bbox_top",
+                "bbox-3": "bbox_right",
                 "centroid-0": "y",
                 "centroid-1": "x",
                 "moments_normalized-0-2": "m02",
@@ -287,12 +287,12 @@ class Factory:
             }
         )
         # 短軸が1ピクセル以下の要素を削除
-        props = props[props["h"] > 1]
+        props = props[props["height"] > 1]
         if len(props) == 0:
             return
         # 長さを合わせる
         props[
-            ["x", "y", "bbox_left", "bbox_bottom", "bbox_right", "bbox_top", "w", "h"]
+            ["x", "y", "bbox_left", "bbox_bottom", "bbox_right", "bbox_top", "width", "height"]
         ] = (
             self.dx
             * props[
@@ -303,8 +303,8 @@ class Factory:
                     "bbox_bottom",
                     "bbox_right",
                     "bbox_top",
-                    "w",
-                    "h",
+                    "width",
+                    "height",
                 ]
             ]
         )
@@ -315,9 +315,9 @@ class Factory:
         props["angle_deg"] = np.rad2deg(props["angle"])
         props["orientation"] = props["angle"] + np.pi / 2
         # アスペクト比を計算する
-        props["h/w"] = props["h"] / props["w"]
+        props["aspect_ratio"] = props["height"] / props["width"]
         # 体積を計算する
-        props["vol_ellipsoid"] = 4.0 * np.pi * (props["w"] / 2.0) ** 2 * (props["h"] / 2.0) / 3.0
+        props["vol_ellipsoid"] = 4.0 * np.pi * (props["width"] / 2.0) ** 2 * (props["height"] / 2.0) / 3.0
         # 歪度を計算する
         sin = np.sin(props["orientation"])
         cos = np.cos(props["orientation"])
@@ -352,7 +352,7 @@ class Factory:
         ymax = self.dx * len(self.original()["y"])
         # オブジェクトが細長過ぎたらフラグ
         props["too_elongated_flag"] = np.where(
-            props["h/w"] > 2, True, np.where(props["h/w"] < 0.5, True, False)
+            props["aspect_ratio"] > 2, True, np.where(props["aspect_ratio"] < 0.5, True, False)
         )
         # オブジェクトが境界に重なっていたらフラグ
         props["border_flag"] = [
@@ -369,14 +369,17 @@ class Factory:
                 "y",
                 "angle",
                 "angle_deg",
-                "w",
-                "h",
+                "width",
+                "height",
+                "aspect_ratio", 
                 "vol_ellipsoid",
                 "skew",
                 "bbox_bottom",
                 "bbox_left",
                 "bbox_top",
                 "bbox_right",
+                "bbox_width", 
+                "bbox_height", 
                 "multi_flag",
                 "border_flag",
                 "too_elongated_flag",
@@ -420,7 +423,7 @@ class Factory:
                 elif obj["too_elongated_flag"]:
                     label = f"{index} (TOO ELONGATED)"
                 else:
-                    label = f"{index} ({obj['width']:.2f}, {obj['height']:.2f}, {obj['h/w']:.2f}, {obj['angle']:.2f})"  # 角度の表記に注意!!!
+                    label = f"{index} ({obj['width']:.2f}, {obj['height']:.2f}, {obj['aspect_ratio']:.2f}, {obj['angle']:.2f})"  # 角度の表記に注意!!!
                 bbox = patches.Rectangle(
                     (obj["bbox_left"], obj["bbox_bottom"]),
                     width=obj["bbox_width"],
@@ -500,6 +503,9 @@ class Factory:
         # 並列処理で画像をラベル化する
         with ProcessPoolExecutor(max_workers=self.max_workers) as executor:
             _ = executor.map(self.generate_report, original)
+        # エラーチェック
+        # for r in _:
+        #     print(r)
         return
 
 
