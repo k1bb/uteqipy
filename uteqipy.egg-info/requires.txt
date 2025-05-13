@@ -1,7 +1,0 @@
-matplotlib
-numpy
-pandas
-xarray
-pillow
-scipy
-scikit-image
