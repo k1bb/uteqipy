@@ -29,7 +29,7 @@ class Factory:
     ############################################################
     # (((三三三三三三三三三三三三三三 初期化 三三三三三三三三三三三三三三三))) #
     ############################################################
-    def __init__(self, factory_name, factory_dir=None, dx=0.05):
+    def __init__(self, factory_name, factory_dir=None, dx=0.05, max_workers=None):
         # ファクトリの名前を指定する
         self.factory_name = factory_name
         # ファクトリのファイルを保存するディレクトリ名を指定する
@@ -72,7 +72,10 @@ class Factory:
         # ピクセル幅を設定する
         self.dx = dx
         # 並列処理に使用可能なCPU数を取得する
-        self.max_workers = cpu_count()
+        if max_workers == None:
+            self.max_workers = cpu_count()
+        else:
+            self.max_workers = max_workers
         return
 
     ############################################################
