@@ -1,5 +1,6 @@
 import glob
 import os
+from pathlib import Path
 from concurrent.futures import ProcessPoolExecutor
 from multiprocessing import cpu_count
 
@@ -78,9 +79,9 @@ class Factory:
             self.max_workers = max_workers
         return
 
-    ############################################################
-    # (((三三三三三三三三三三 netcdfファイルを開く 三三三三三三三三三三三))) #
-    ############################################################
+    ######################################################
+    # (((三三三三三三三三三三 ファイルを開く 三三三三三三三三三三三))) #
+    ######################################################
     def _open_nc(self, path, chunks=None):
         return xr.open_dataarray(path, chunks=chunks)
 
@@ -98,6 +99,12 @@ class Factory:
 
     def labeled(self, chunks=None):
         return self._open_nc(self.labeled_file, chunks=chunks)
+
+    def _remove_old_file(self, path):
+        p = Path(path)
+        if p.exists():
+            p.unlink()
+        return
 
     ############################################################
     # (((三三三三三三三三三三三 csvファイルを開く 三三三三三三三三三三三三))) #
@@ -126,6 +133,7 @@ class Factory:
         y = self.dx * np.arange(len(original["y"]))
         original = original.assign_coords({"x": ("x", x), "y": ("y", y)})
         # 保存
+        self._remove_old_file(self.original_file)
         original.to_netcdf(self.original_file)
         return
 
@@ -145,6 +153,7 @@ class Factory:
         # 空間情報を元にDataArrayを連結する
         cleaned = xr.concat(cleaned, dim="y").transpose("time", "y", "x")
         # 保存
+        self._remove_old_file(self.cleaned_file)
         cleaned.to_netcdf(self.cleaned_file)
         return
 
@@ -185,6 +194,7 @@ class Factory:
         # データ型を戻す
         binarized = binarized.astype("uint8")
         # 保存
+        self._remove_old_file(self.binarized_file)
         binarized.to_netcdf(self.binarized_file)
         return
 
@@ -220,6 +230,7 @@ class Factory:
         # 時刻情報を元にDataArrayを連結する
         labeled = xr.concat(labeled, dim="time")
         # 保存
+        self._remove_old_file(self.labeled_file)
         labeled.to_netcdf(self.labeled_file)
         return
 
