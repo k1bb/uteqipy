@@ -1,5 +1,6 @@
-import glob
 import os
+import time
+import glob
 from pathlib import Path
 from concurrent.futures import ProcessPoolExecutor
 from multiprocessing import cpu_count
@@ -31,7 +32,10 @@ class Factory:
     # (((三三三三三三三三三三三三三三 初期化 三三三三三三三三三三三三三三三))) #
     ############################################################
     def __init__(self, factory_name, factory_dir=None, dx=0.05, max_workers=None):
+        # 開始メッセージ
+        start = time.time()
         # ファクトリの名前を指定する
+        print(f"Initialize factory at {factory_name}.")
         self.factory_name = factory_name
         # ファクトリのファイルを保存するディレクトリ名を指定する
         if factory_dir is None:
@@ -77,6 +81,12 @@ class Factory:
             self.max_workers = cpu_count()
         else:
             self.max_workers = max_workers
+        print(f"max_workers = {max_workers}.")
+        # 終了メッセージ
+        print("Initialization completed.")
+        end = time.time()
+        time_diff = end - start
+        print(f"Time: {time_diff}")
         return
 
     ######################################################
@@ -121,6 +131,9 @@ class Factory:
     # (((三三三三三三三三三三三三 画像の読み込み 三三三三三三三三三三三三三))) #
     ############################################################
     def read_frames(self, input):
+        # 開始メッセージ
+        start = time.time()
+        print("Start reading frames.")
         # パスの一覧
         paths = sorted(glob.glob(input))
         # 並列処理で画像を読み込みDataArrayに変換する
@@ -135,12 +148,20 @@ class Factory:
         # 保存
         self._remove_old_file(self.original_file)
         original.to_netcdf(self.original_file)
+        # 終了メッセージ
+        print("End reading frames.")
+        end = time.time()
+        time_diff = end - start
+        print(f"Time: {time_diff}")
         return
 
     ############################################################
     # (((三三三三三三三三三三三三 オフセットの補正 三三三三三三三三三三三三))) #
     ############################################################
     def clean_frames(self, median_window_size=5):
+        # 開始メッセージ
+        start = time.time()
+        print("Start cleaning frames.")
         if median_window_size % 2 == 0:
             raise ValueError("median_window_size must be odd.")
         else:
@@ -155,6 +176,11 @@ class Factory:
         # 保存
         self._remove_old_file(self.cleaned_file)
         cleaned.to_netcdf(self.cleaned_file)
+        # 終了メッセージ
+        print("End cleaning frames.")
+        end = time.time()
+        time_diff = end - start
+        print(f"Time: {time_diff}")
         return
 
     # 一部のピクセルのオフセットを補正する
@@ -181,6 +207,10 @@ class Factory:
     # (((三三三三三三三三三三三三三三 二値化 三三三三三三三三三三三三三三三))) #
     ############################################################
     def binarize_frames(self, gaussian_sigma=1, binarize_threshold=3):
+        # 開始メッセージ
+        start = time.time()
+        print("Start binarizing frames.")
+        # 処理の準備
         cleaned = self.cleaned()
         self.gaussian_sigma = gaussian_sigma
         self.binarize_threshold = binarize_threshold
@@ -196,17 +226,18 @@ class Factory:
         # 保存
         self._remove_old_file(self.binarized_file)
         binarized.to_netcdf(self.binarized_file)
+        print("End binarizing frames.")
         return
 
     # Gaussianフィルタをかけて2値化する
     def _binarize_a_frame(self, frame):
-        time = frame["time"].values
+        dt = frame["time"].values
         # ガウシアンフィルタをかける
         blurred = xr.DataArray(
             name="brightness",
             data=gaussian_filter(frame.to_numpy(), self.gaussian_sigma),
             coords=frame.coords,
-        ).expand_dims(time=[time])
+        ).expand_dims(time=[dt])
         # 2値化
         binarized = xr.where(blurred > self.binarize_threshold, 255, 0).rename("binary")
         # 何か写っていたら結果を返し、何も写っていなければ終了
@@ -219,9 +250,13 @@ class Factory:
     # (((三三三三三三三三三三三三三 ラベル付け 三三三三三三三三三三三三三三))) #
     ############################################################
     def label_frames(self, closing_mask_size=9):
+        # 開始メッセージ
+        start = time.time()
+        print("Start labeling frames.")
+        # ファイルパスを設定
         binarized = self.binarized()
         # 並列処理用にフレームをリスト化する
-        bfs = [binarized.sel(time=time) for time in binarized["time"]]
+        bfs = [binarized.sel(time=t) for t in binarized["time"]]
         # closingの範囲をつくる
         self.closing_mask = _generate_closing_mask(closing_mask_size).to_numpy()
         # 並列処理で画像をラベル化する
@@ -232,6 +267,11 @@ class Factory:
         # 保存
         self._remove_old_file(self.labeled_file)
         labeled.to_netcdf(self.labeled_file)
+        # 終了メッセージ
+        print("End labeling frames.")
+        end = time.time()
+        time_diff = end - start
+        print(f"Time: {time_diff}")
         return
 
     # 2値化されたフレーム中のオブジェクトをラベリングする
@@ -243,10 +283,10 @@ class Factory:
         # オブジェクトをラベリングする
         labeled = label(filled)[0]
         # DataArray化
-        time = binarized_frame["time"].values
+        dt = binarized_frame["time"].values
         labeled = (
             xr.DataArray(name="label", data=labeled, coords=binarized_frame.coords)
-            .expand_dims(time=[time])
+            .expand_dims(time=[dt])
             .astype("uint8")
         )
         return labeled
@@ -255,6 +295,10 @@ class Factory:
     # (((三三三三三三三三三三三三三 楕円近似 三三三三三三三三三三三三三三三))) #
     ############################################################
     def fit_objects(self):
+        # 開始メッセージ
+        start = time.time()
+        print("Start fitting objects.")
+        # 出力パスの設定
         labeled = self.labeled()
         # 並列処理で画像をラベル化する
         with ProcessPoolExecutor(max_workers=self.max_workers) as executor:
@@ -262,6 +306,11 @@ class Factory:
         fitted = pd.concat(fitted)
         # 保存
         fitted.to_csv(self.fitted_file)
+        # 終了メッセージ
+        print("End fitting objects.")
+        end = time.time()
+        time_diff = end - start
+        print(f"Time: {time_diff}")
         return
 
     # ラベル付けされたフレーム中のオブジェクトを楕円近似する
@@ -406,8 +455,8 @@ class Factory:
     ############################################################
     def generate_report(self, im, show=False, save=True):
         fitted = self.fitted()
-        time = im["time"].values
-        objects_in_the_frame = fitted[fitted["time"] == time]
+        dt = im["time"].values
+        objects_in_the_frame = fitted[fitted["time"] == dt]
 
         xmax = self.dx * len(im["x"])
         ymax = self.dx * len(im["y"])
@@ -512,23 +561,29 @@ class Factory:
 
     # オブジェクトが写っているすべてのフレームのレポートを出力する
     def generate_all_reports(self):
+        # 開始メッセージ
+        start = time.time()
+        print("Start generating reports.")
+        # 処理の準備
         original = self.original()
         nframes = len(original["time"])
         # 並列処理で画像をラベル化する
         with ProcessPoolExecutor(max_workers=self.max_workers) as executor:
             _ = executor.map(self.generate_report, original)
-        # エラーチェック
-        # for r in _:
-        #     print(r)
+        # 終了メッセージ
+        print("End generating reports.")
+        end = time.time()
+        time_diff = end - start
+        print(f"Time: {time_diff}")
         return
 
 
 # 画像データをDataArrayとして読み込む
 def _image_to_DataArray(path):
-    name, time = _path_to_time(path)
+    name, dt = _path_to_time(path)
     data = np.array(Image.open(path))
     da = xr.DataArray(name="brightness", data=data, dims=["y", "x"]).expand_dims(
-        time=[time]
+        time=[dt]
     )
     # ファイル名の情報を追加
     da = da.assign_coords(filename=("time", [name]))
@@ -548,10 +603,10 @@ def _path_to_time(path):
     minute = name[10:12]
     second = name[12:14]
     millisecond = name[14:17]
-    time = np.datetime64(
+    dt = np.datetime64(
         f"{year}-{month}-{date}T{hour}:{minute}:{second}.{millisecond}"
     ).astype("datetime64[ns]")
-    return name, time
+    return name, dt
 
 
 # closingの範囲をつくる
