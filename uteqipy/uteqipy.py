@@ -81,12 +81,11 @@ class Factory:
             self.max_workers = cpu_count()
         else:
             self.max_workers = max_workers
-        print(f"max_workers = {max_workers}.")
+        print(f"max_workers = {self.max_workers}.")
         # 終了メッセージ
-        print("Initialization completed.")
         end = time.time()
         time_diff = end - start
-        print(f"Time: {time_diff}")
+        print("Initialization completed. (time: {time_diff:.3f} s)")
         return
 
     ######################################################
@@ -149,10 +148,9 @@ class Factory:
         self._remove_old_file(self.original_file)
         original.to_netcdf(self.original_file)
         # 終了メッセージ
-        print("End reading frames.")
         end = time.time()
         time_diff = end - start
-        print(f"Time: {time_diff}")
+        print("End reading frames. (time: {time_diff:.3f} s)")
         return
 
     ############################################################
@@ -177,10 +175,9 @@ class Factory:
         self._remove_old_file(self.cleaned_file)
         cleaned.to_netcdf(self.cleaned_file)
         # 終了メッセージ
-        print("End cleaning frames.")
         end = time.time()
         time_diff = end - start
-        print(f"Time: {time_diff}")
+        print("End cleaning frames. (time: {time_diff:.3f} s)")
         return
 
     # 一部のピクセルのオフセットを補正する
@@ -268,10 +265,9 @@ class Factory:
         self._remove_old_file(self.labeled_file)
         labeled.to_netcdf(self.labeled_file)
         # 終了メッセージ
-        print("End labeling frames.")
         end = time.time()
         time_diff = end - start
-        print(f"Time: {time_diff}")
+        print("End labeling frames. (time: {time_diff:.3f} s)")
         return
 
     # 2値化されたフレーム中のオブジェクトをラベリングする
@@ -307,10 +303,9 @@ class Factory:
         # 保存
         fitted.to_csv(self.fitted_file)
         # 終了メッセージ
-        print("End fitting objects.")
         end = time.time()
         time_diff = end - start
-        print(f"Time: {time_diff}")
+        print("End fitting objects. (time: {time_diff:.3f} s)")
         return
 
     # ラベル付けされたフレーム中のオブジェクトを楕円近似する
@@ -462,7 +457,7 @@ class Factory:
         ymax = self.dx * len(im["y"])
 
         fig, ax = plt.subplots(figsize=(4, 3), dpi=300)
-        ax.set_title(f"{str(time)[:-6]} ({len(objects_in_the_frame)})", y=1.04)
+        ax.set_title(f"{str(dt)[:-6]} ({len(objects_in_the_frame)})", y=1.04)
         ax.tick_params(
             axis="both", which="both", top=True, bottom=True, right=True, left=True
         )
@@ -486,7 +481,7 @@ class Factory:
                 elif obj["too_elongated_flag"]:
                     label = f"{index} (TOO ELONGATED)"
                 else:
-                    label = f"{index} ({obj['width']:.2f}, {obj['height']:.2f}, {obj['aspect_ratio']:.2f}, {obj['angle']:.2f})"  # 角度の表記に注意!!!
+                    label = f"{index} (W: {obj['width']:.2f}, H: {obj['height']:.2f})"
                 bbox = patches.Rectangle(
                     (obj["bbox_left"], obj["bbox_bottom"]),
                     width=obj["bbox_width"],
@@ -507,7 +502,7 @@ class Factory:
                     linestyle="dashed",
                 )
                 t = (
-                    Affine2D().rotate_deg_around(obj["x"], obj["y"], -obj["angle"])
+                    Affine2D().rotate_deg_around(obj["x"], obj["y"], -obj["angle_deg"])
                     + ax.transData
                 )
                 rectangle.set_transform(t)
@@ -571,10 +566,9 @@ class Factory:
         with ProcessPoolExecutor(max_workers=self.max_workers) as executor:
             _ = executor.map(self.generate_report, original)
         # 終了メッセージ
-        print("End generating reports.")
         end = time.time()
         time_diff = end - start
-        print(f"Time: {time_diff}")
+        print("End generating reports. (time: {time_diff:.3f} s)")
         return
 
 
