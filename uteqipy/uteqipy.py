@@ -85,7 +85,7 @@ class Factory:
         # 終了メッセージ
         end = time.time()
         time_diff = end - start
-        print("Initialization completed. (time: {time_diff:.3f} s)")
+        print(f"Initialization completed. (time: {time_diff:.3f} s)")
         return
 
     ######################################################
@@ -150,7 +150,7 @@ class Factory:
         # 終了メッセージ
         end = time.time()
         time_diff = end - start
-        print("End reading frames. (time: {time_diff:.3f} s)")
+        print(f"End reading frames. (time: {time_diff:.3f} s)")
         return
 
     ############################################################
@@ -177,7 +177,7 @@ class Factory:
         # 終了メッセージ
         end = time.time()
         time_diff = end - start
-        print("End cleaning frames. (time: {time_diff:.3f} s)")
+        print(f"End cleaning frames. (time: {time_diff:.3f} s)")
         return
 
     # 一部のピクセルのオフセットを補正する
@@ -223,7 +223,10 @@ class Factory:
         # 保存
         self._remove_old_file(self.binarized_file)
         binarized.to_netcdf(self.binarized_file)
-        print("End binarizing frames.")
+        # 終了メッセージ
+        end = time.time()
+        time_diff = end - start
+        print(f"End binarizing frames. (time: {time_diff:.3f} s)")
         return
 
     # Gaussianフィルタをかけて2値化する
@@ -267,7 +270,7 @@ class Factory:
         # 終了メッセージ
         end = time.time()
         time_diff = end - start
-        print("End labeling frames. (time: {time_diff:.3f} s)")
+        print(f"End labeling frames. (time: {time_diff:.3f} s)")
         return
 
     # 2値化されたフレーム中のオブジェクトをラベリングする
@@ -305,7 +308,7 @@ class Factory:
         # 終了メッセージ
         end = time.time()
         time_diff = end - start
-        print("End fitting objects. (time: {time_diff:.3f} s)")
+        print(f"End fitting objects. (time: {time_diff:.3f} s)")
         return
 
     # ラベル付けされたフレーム中のオブジェクトを楕円近似する
@@ -568,7 +571,7 @@ class Factory:
         # 終了メッセージ
         end = time.time()
         time_diff = end - start
-        print("End generating reports. (time: {time_diff:.3f} s)")
+        print(f"End generating reports. (time: {time_diff:.3f} s)")
         return
 
 
