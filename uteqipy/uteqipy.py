@@ -91,23 +91,23 @@ class Factory:
     ######################################################
     # (((三三三三三三三三三三 ファイルを開く 三三三三三三三三三三三))) #
     ######################################################
-    def _open_nc(self, path, chunks=None):
-        return xr.open_dataarray(path, chunks=chunks)
+    def _open_nc(self, path):
+        return xr.open_dataarray(path, chunks={"time": "auto"})
 
-    def original(self, chunks=None):
-        return self._open_nc(self.original_file, chunks=chunks)
+    def original(self):
+        return self._open_nc(self.original_file)
 
-    def cleaned(self, chunks=None):
-        return self._open_nc(self.cleaned_file, chunks=chunks)
+    def cleaned(self):
+        return self._open_nc(self.cleaned_file)
 
-    def blurred(self, chunks=None):
-        return self._open_nc(self.blurred_file, chunks=chunks)
+    def blurred(self):
+        return self._open_nc(self.blurred_file)
 
-    def binarized(self, chunks=None):
-        return self._open_nc(self.binarized_file, chunks=chunks)
+    def binarized(self):
+        return self._open_nc(self.binarized_file)
 
-    def labeled(self, chunks=None):
-        return self._open_nc(self.labeled_file, chunks=chunks)
+    def labeled(self):
+        return self._open_nc(self.labeled_file)
 
     def _remove_old_file(self, path):
         p = Path(path)
@@ -165,7 +165,7 @@ class Factory:
         else:
             self.median_window_size = median_window_size
         # 元データを読み込む
-        original = self.original(chunks={"time": "auto"}).transpose("y", "x", "time")
+        original = self.original().transpose("y", "x", "time")
         # 並列処理で画像をラベル化する
         with ProcessPoolExecutor(max_workers=self.max_workers) as executor:
             cleaned = list(executor.map(self._clean_pixels, original))
